@@ -5,6 +5,7 @@ do — agent.py should only import from here, never define ad-hoc tools.
 """
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 TOOLS_SCHEMA = [
@@ -54,19 +55,33 @@ TOOLS_SCHEMA = [
 
 
 def read_file(path: str) -> str:
-    # TODO: Path(path).resolve(), read_text(encoding="utf-8"), sane error on missing file
-    raise NotImplementedError
+    resolved = Path(path).resolve()
+    if not resolved.is_file():
+        raise FileNotFoundError(f"{path} -> {resolved} does not exist")
+    return resolved.read_text(encoding="utf-8")
 
 
 def write_file(path: str, content: str) -> str:
-    # TODO: Path(path).resolve(), write_text(encoding="utf-8"), return a confirmation string
-    raise NotImplementedError
+    resolved = Path(path).resolve()
+    resolved.parent.mkdir(parents=True, exist_ok=True)
+    resolved.write_text(content, encoding="utf-8")
+    return f"wrote {len(content)} chars to {resolved}"
 
 
 def run_command(command: str) -> str:
-    # TODO: subprocess.run(["powershell", "-Command", command], shell=False,
-    #       capture_output=True, text=True, timeout=30); return combined stdout/stderr
-    raise NotImplementedError
+    result = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", command],
+        shell=False,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    output = result.stdout
+    if result.stderr:
+        output += f"\n[stderr]\n{result.stderr}"
+    if result.returncode != 0:
+        output += f"\n[exit code {result.returncode}]"
+    return output
 
 
 DISPATCH = {

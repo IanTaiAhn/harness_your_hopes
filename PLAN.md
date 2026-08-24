@@ -11,36 +11,37 @@ Companion to [`learning-agent-harnesses-locally.md`](./learning-agent-harnesses-
 
 ## Status legend
 
-`[ ]` not started · `[~]` in progress · `[x]` done-when met · `[M]` measured (fully complete)
+Each item below is prefixed with one of: `[ ]` not started · `[~]` in progress · `[x]` done-when met · `[M]` measured (fully complete). Update the prefix in place as a project moves forward — don't stack markers.
 
 ## Ladder
 
-- [ ] `[~]` `[M]` **1. Bare-metal tool loop** — `projects/01-bare-metal-loop/`
+- [~] **1. Bare-metal tool loop** — `projects/01-bare-metal-loop/`
   Raw Python loop, no framework. 3 tools: read_file, write_file, run_command.
   Done when: 8/10 runs succeed unattended on the 4B for a 3–4 step task.
   Measure: retry-on-malformed-JSON on vs. off, 4B and 9B.
+  Status: code + mocked unit tests done (PR TBD). Not yet run against real Ollama — do that next, then start the trial log.
 
-- [ ] `[~]` `[M]` **2. Survive a restart** — `projects/02-survive-restart/`
+- [ ] **2. Survive a restart** — `projects/02-survive-restart/`
   Progress file on disk, atomic writes, resume after a hard kill.
   Done when: hard-kill at 5 different points, next run resumes clean each time.
   Measure: structured progress file vs. naive replay-last-N-messages — find the crossover length where replay fails.
 
-- [ ] `[~]` `[M]` **2.5 Run out of context on purpose** — `projects/025-context-overflow/`
+- [ ] **2.5 Run out of context on purpose** — `projects/025-context-overflow/`
   Force a task past `num_ctx`. Implement 2 of: summarize old turns, drop tool outputs, full reset from progress file.
   Done when: task needing more than `num_ctx` tokens completes without losing track.
   Measure: score both strategies on the same task, then halve `num_ctx` and rerun.
 
-- [ ] `[~]` `[M]` **3. Permission-gated file agent** — `projects/03-permission-gated-agent/`
+- [ ] **3. Permission-gated file agent** — `projects/03-permission-gated-agent/`
   Allowlist + real OS-level sandbox underneath it (Docker/Windows Sandbox/bwrap). Audit log of every action, including refused ones.
   Done when: agent can't escape the allowlist even under deliberate attack.
   Measure: try 5 escape techniques (`..` traversal, drive-relative paths, UNC paths, junctions, 8.3 short names) against Python-only allowlist, then again with the sandbox underneath. Record the gap.
 
-- [ ] `[~]` `[M]` **4. Generator–evaluator loop** — `projects/04-generator-evaluator/`
+- [ ] **4. Generator–evaluator loop** — `projects/04-generator-evaluator/`
   Separate generate vs. verify roles. Deterministic evaluator (pytest) preferred over a second model call.
   Done when: evaluator catches at least one real false "done" claim, and retry-with-feedback then succeeds.
   Measure: generator self-reported success rate vs. evaluator-verified rate, 20 tasks. Recheck the gap on the 9B.
 
-- [ ] `[~]` `[M]` **5. Capstone — initializer/coding-agent** — `projects/05-capstone/`
+- [ ] **5. Capstone — initializer/coding-agent** — `projects/05-capstone/`
   Initializer writes `feature_list.json` + init script + first commit. Coding agent reads progress + `git log` first, does one feature, tests, commits — run as N fresh processes.
   Done when: unattended run across several restarts ends with a working incrementally-built app and clean git history.
   Measure: ablate one component at a time (feature list / git-log read / commit-per-session) and see which breaks the run fastest.
@@ -61,5 +62,7 @@ Companion to [`learning-agent-harnesses-locally.md`](./learning-agent-harnesses-
 ## Running log
 
 Freeform notes as you go — surprises, dead ends, things that took longer than expected. Newest entry on top.
+
+- 2026-08-24: Implemented Project 1 for real (`common/ollama_client.py`, `projects/01-bare-metal-loop/{agent,tools}.py`) and added mocked unit tests, since this authoring environment has no Ollama to run against. Two design notes worth remembering: (1) `chat()` targets Ollama's native `/api/chat`, not the `/v1` OpenAI-compat shim — the native endpoint is what actually accepts `options.num_ctx` and returns token counts. (2) Ollama pre-parses `tool_calls[].function.arguments` into a dict, so "malformed tool-call JSON" can't happen through that field — the real small-model failure is falling out of structured tool-calling and dumping a JSON guess into plain `content`, which is what the retry/ablation logic actually handles. First real-Ollama run and the 40-trial measurement log are still open.
 
 <!-- 2026-XX-XX: example entry -->

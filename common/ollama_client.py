@@ -11,7 +11,10 @@ from pathlib import Path
 
 import requests
 
-BASE_URL = "http://localhost:11434/v1"
+# Native Ollama API, not the /v1 OpenAI-compat shim: the native /api/chat
+# endpoint is what actually accepts `options.num_ctx` and returns
+# prompt_eval_count/eval_count, which is what log_token_usage needs.
+BASE_URL = "http://localhost:11434"
 DEFAULT_NUM_CTX = 8192
 
 
@@ -30,13 +33,26 @@ def chat(
     num_ctx: int = DEFAULT_NUM_CTX,
     timeout: int = 300,
 ) -> ChatResult:
-    """Send one chat turn. Raises requests.HTTPError on non-2xx.
+    """Send one chat turn. Raises requests.HTTPError on non-2xx."""
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": False,
+        "options": {"num_ctx": num_ctx},
+    }
+    if tools:
+        payload["tools"] = tools
 
-    TODO: implement the POST to {BASE_URL}/chat/completions with
-    `options: {"num_ctx": num_ctx}` in the Ollama-native fields, parse
-    tool_calls out of the response, and populate ChatResult.
-    """
-    raise NotImplementedError
+    response = requests.post(f"{BASE_URL}/api/chat", json=payload, timeout=timeout)
+    response.raise_for_status()
+    data = response.json()
+
+    return ChatResult(
+        message=data["message"],
+        prompt_tokens=data.get("prompt_eval_count", 0),
+        completion_tokens=data.get("eval_count", 0),
+        raw=data,
+    )
 
 
 def log_token_usage(log_path: Path, turn: int, result: ChatResult) -> None:

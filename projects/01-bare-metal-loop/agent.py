@@ -70,8 +70,14 @@ def run(task: str) -> bool:
 
     json_retries = 0
     for turn in range(MAX_TURNS):
+        print(f"[turn {turn}] waiting on model...", flush=True)
         result = chat(MODEL, messages, tools=TOOLS_SCHEMA)
         log_token_usage(log_path, turn, result)
+        print(
+            f"[turn {turn}] {result.prompt_tokens} prompt / "
+            f"{result.completion_tokens} completion tokens",
+            flush=True,
+        )
 
         message = result.message
         messages.append(message)
@@ -79,10 +85,16 @@ def run(task: str) -> bool:
         tool_calls = _normalize_tool_calls(message)
 
         if tool_calls is None:
+            print(f"[turn {turn}] final answer, done", flush=True)
             return True  # plain-text final answer: task considered done
 
         if not tool_calls:
             json_retries += 1
+            print(
+                f"[turn {turn}] malformed tool-call JSON "
+                f"(retry {json_retries}/{MAX_JSON_RETRIES})",
+                flush=True,
+            )
             if json_retries > MAX_JSON_RETRIES:
                 return False
             messages.append(
@@ -106,10 +118,13 @@ def run(task: str) -> bool:
                     args = json.loads(args)
                 except json.JSONDecodeError:
                     args = {}
+            print(f"[turn {turn}] calling {name}({args})", flush=True)
             try:
                 output = DISPATCH[name](**args)
             except Exception as e:  # tool failure is fed back, not fatal
                 output = f"error: {e}"
+            preview = str(output)[:200] + ("..." if len(str(output)) > 200 else "")
+            print(f"[turn {turn}] {name} -> {preview}", flush=True)
             messages.append({"role": "tool", "content": str(output)})
 
     return False  # hit MAX_TURNS without a clean finish

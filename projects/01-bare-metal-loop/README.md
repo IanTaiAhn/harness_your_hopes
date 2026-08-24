@@ -21,7 +21,9 @@ Note on the malformed-JSON path: Ollama's native `/api/chat` already returns `to
 
 ## Status
 
-Code is implemented and covered by mocked unit tests (`uv run pytest projects/01-bare-metal-loop`) that fake `chat()` so the loop, retry, and dispatch logic run without a real model. Nobody has run this against actual Ollama yet — that only happens on a machine with Ollama installed, which this repo was authored without. Do that next: `uv run python agent.py "read this file, count the lines, write the count to a new file"` against a real input file.
+Code is implemented and covered by mocked unit tests (`uv run pytest projects/01-bare-metal-loop`) that fake `chat()` so the loop, retry, and dispatch logic run without a real model. `agent.py` prints per-turn progress (`[turn N] ...`) as it goes, since a genuinely working run on CPU can take minutes and silent output is indistinguishable from a hang.
+
+First real run against Ollama (qwen3.5:4b, ~2000-line input file) completed successfully but undercounted lines by 1 (2058 vs. 2059). Likely cause: the tool set has no dedicated line-counter, so the model has to eyeball-count the raw file contents in its own context rather than getting an exact count from a tool — a plausible small-model failure mode worth tracking across trials, not necessarily a harness bug. Note in the trial log whether the model reached for `run_command` (e.g. `(Get-Content file).Count`) or just reasoned over the text — that distinguishes "model can't count" from "PowerShell counted differently than Notepad" (trailing-newline handling differs between the two).
 
 ## Done when
 

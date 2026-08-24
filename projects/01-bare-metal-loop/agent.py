@@ -1,6 +1,6 @@
 """Project 1: bare-metal tool loop.
 
-Run: .venv\\Scripts\\python.exe agent.py "read this file, count the lines,
+Run: uv run python agent.py "read this file, count the lines,
 write the count to a new file"
 """
 from __future__ import annotations

@@ -14,7 +14,7 @@ Target: a tiny local coding project (CLI to-do app, or a small Flask app) — pi
   - [ ] picks exactly one unfinished feature
   - [ ] implements it, tests it (pytest via subprocess, or `curl.exe` against a fixed dev port — **skip browser automation**, out of RAM budget)
   - [ ] commits before the process ends
-  - [ ] uses `.venv\Scripts\python.exe` explicitly in every subprocess call — don't rely on inherited `PATH`
+  - [ ] invokes every subprocess as `uv run python ...` explicitly — don't rely on inherited `PATH`
 - [ ] `run_loop.ps1` — drives N fresh `python coding_agent.py` processes in a real loop (`for ($i=1; $i -le 10; $i++) { ... }`), so each iteration is genuinely a new process, not a re-used one
 
 ## What this is actually testing

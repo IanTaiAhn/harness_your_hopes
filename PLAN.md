@@ -55,7 +55,7 @@ Companion to [`learning-agent-harnesses-locally.md`](./learning-agent-harnesses-
 - [ ] `ollama pull qwen3.5:4b` and `ollama pull qwen3.5:9b`
 - [ ] `ollama show qwen3.5:4b` confirms `tools` under Capabilities (repeat for 9b)
 - [ ] `OLLAMA_MAX_LOADED_MODELS=1`, `OLLAMA_KEEP_ALIVE=5m` set, service restarted
-- [ ] venv created, `pip install -r requirements.txt`
+- [ ] `uv` installed, `uv sync` run successfully (creates `.venv`, installs deps from `pyproject.toml`)
 - [ ] Decided native Windows vs. WSL2 for Projects 1–2 (move to WSL2/container at Project 3 regardless)
 
 ## Running log

@@ -9,5 +9,5 @@ param(
 
 for ($i = 1; $i -le $Iterations; $i++) {
     Write-Host "=== Iteration $i ==="
-    & ..\..\.venv\Scripts\python.exe coding_agent.py
+    & uv run python coding_agent.py
 }

@@ -1,0 +1,12 @@
+[project]
+name = "harness-your-hopes"
+version = "0.1.0"
+description = "Learning agent-harness engineering against local models"
+requires-python = ">=3.11"
+dependencies = [
+    "requests",
+    "pytest",
+]
+
+[tool.uv]
+package = false

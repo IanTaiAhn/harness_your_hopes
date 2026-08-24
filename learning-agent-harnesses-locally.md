@@ -63,13 +63,13 @@ Look for `tools` under Capabilities. Do this per model — capabilities differ w
 
 ### Environment
 
-Work in a venv from the start, since Project 4 shells out to `pytest`:
+Use `uv` from the start, since Project 4 shells out to `pytest`. Install it once via the installer at `astral.sh/uv` (or `winget install astral-sh.uv`), then in the repo root:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install requests pytest
+uv sync
 ```
+
+This reads `pyproject.toml`, creates `.venv`, and installs `requests` + `pytest` — no separate activate step needed since every script below is invoked as `uv run ...`. If you'd rather activate it directly: `.\.venv\Scripts\Activate.ps1`.
 
 If script execution is blocked, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
 
@@ -177,8 +177,8 @@ Run it as a literal loop across multiple fresh Python processes to simulate real
 - The init script is `init.ps1` or `init.bat`, not `init.sh`. Say so in the initializer's prompt, or you'll get bash and the model will never notice it failed.
 - Set `git config core.autocrlf true` before the first commit. Otherwise line-ending churn will make every diff look enormous and your `git log` handoff signal becomes noise.
 - Verify with `pytest` via subprocess, or `curl.exe` against a dev server on a fixed port. **Skip browser automation** — it's more than you need and it won't fit in your RAM budget alongside a 9B model.
-- Use the venv's Python explicitly (`.venv\Scripts\python.exe`) in every subprocess call. Don't rely on `PATH` inheriting correctly across a fresh process.
-- Drive the outer loop from a PowerShell script (`for ($i=1; $i -le 10; $i++) { python agent.py }`) so each iteration really is a fresh process.
+- Invoke every subprocess as `uv run python ...` explicitly. Don't rely on `PATH` inheriting correctly across a fresh process.
+- Drive the outer loop from a PowerShell script (`for ($i=1; $i -le 10; $i++) { uv run python agent.py }`) so each iteration really is a fresh process.
 
 **What it teaches:** Everything from 1–4 combined, plus the two failure modes that motivated the whole design: the agent trying to one-shot the entire project, and the agent declaring victory too early.
 

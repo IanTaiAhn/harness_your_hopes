@@ -10,3 +10,14 @@ dependencies = [
 
 [tool.uv]
 package = false
+
+[tool.pytest.ini_options]
+# Every project reuses the same test file basenames (test_agent.py,
+# test_tools.py, ...) with no __init__.py per project (the 0X-slug
+# directory names aren't valid package identifiers anyway). Pytest's
+# default import mode identifies a test module by its bare filename, so
+# running the suite across more than one project at once causes an
+# "import file mismatch" collision. --import-mode=importlib identifies
+# each test module by its full path instead, which sidesteps this
+# without requiring package-style directories.
+addopts = ["--import-mode=importlib"]

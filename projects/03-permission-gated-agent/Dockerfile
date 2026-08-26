@@ -15,7 +15,10 @@ RUN uv sync --no-install-project
 
 COPY . .
 
-# TODO: agent.py should read its allowlist root from an env var (e.g.
-# WORKSPACE_ROOT=/workspace) so the same code runs identically in and
-# out of the container — only the bind mount changes what's reachable.
+# agent.py reads its allowlist root from WORKSPACE_ROOT, so the same code
+# runs identically in and out of the container -- only the bind mount
+# changes what's actually reachable at that path.
+ENV WORKSPACE_ROOT=/workspace
+RUN mkdir -p /workspace
+
 CMD ["uv", "run", "python", "projects/03-permission-gated-agent/agent.py"]

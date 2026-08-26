@@ -4,6 +4,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+# Project 3 also has an agent.py/tools.py sharing these bare module
+# names; evict any stale sys.modules entry so this always resolves to
+# this project's own version in a shared pytest process.
+sys.modules.pop("agent", None)
+sys.modules.pop("tools", None)
 import agent  # noqa: E402
 from common.ollama_client import ChatResult  # noqa: E402
 

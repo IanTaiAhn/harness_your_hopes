@@ -3,6 +3,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
+# Project 3 also has a tools.py sharing this bare module name; evict any
+# stale sys.modules entry so this always resolves to this project's own
+# version in a shared pytest process.
+sys.modules.pop("tools", None)
 import tools  # noqa: E402
 
 import pytest

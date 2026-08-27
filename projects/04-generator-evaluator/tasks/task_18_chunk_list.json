@@ -1,0 +1,5 @@
+{
+  "id": "task_18_chunk_list",
+  "prompt": "Write a Python file at tasks/solutions/task_18_chunk_list.py that defines `chunk_list(items: list, size: int) -> list[list]`. Split `items` into consecutive chunks of length `size`; the final chunk may be shorter if `items` doesn't divide evenly.",
+  "test_file": "test_task_18.py"
+}

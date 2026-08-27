@@ -1,0 +1,5 @@
+{
+  "id": "task_17_is_anagram",
+  "prompt": "Write a Python file at tasks/solutions/task_17_is_anagram.py that defines `is_anagram(a: str, b: str) -> bool`. Return True if the two strings are anagrams of each other.",
+  "test_file": "test_task_17.py"
+}

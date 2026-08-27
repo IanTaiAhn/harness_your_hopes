@@ -1,0 +1,5 @@
+{
+  "id": "task_08_caesar_encrypt",
+  "prompt": "Write a Python file at tasks/solutions/task_08_caesar_encrypt.py that defines `caesar_encrypt(s: str, shift: int) -> str`. Shift only alphabetic characters by `shift` positions, wrapping around within 'a'-'z' and 'A'-'Z' separately, preserving each letter's original case. Leave all non-alphabetic characters (spaces, digits, punctuation) unchanged. `shift` may be negative or larger than 26.",
+  "test_file": "test_task_08.py"
+}

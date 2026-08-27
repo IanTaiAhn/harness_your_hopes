@@ -1,0 +1,5 @@
+{
+  "id": "task_09_word_frequency",
+  "prompt": "Write a Python file at tasks/solutions/task_09_word_frequency.py that defines `word_frequency(text: str) -> dict`. It returns a count of how many times each word appears in `text`.",
+  "test_file": "test_task_09.py"
+}

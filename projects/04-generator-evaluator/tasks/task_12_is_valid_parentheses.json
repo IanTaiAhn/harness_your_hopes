@@ -1,0 +1,5 @@
+{
+  "id": "task_12_is_valid_parentheses",
+  "prompt": "Write a Python file at tasks/solutions/task_12_is_valid_parentheses.py that defines `is_valid_parentheses(s: str) -> bool`. `s` contains only the characters '()[]{{}}'. Return True if every opening bracket has a matching closing bracket of the same type in the correct order.",
+  "test_file": "test_task_12.py"
+}

@@ -1,0 +1,5 @@
+{
+  "id": "task_03_reverse_words",
+  "prompt": "Write a Python file at tasks/solutions/task_03_reverse_words.py that defines `reverse_words(s: str) -> str`. It reverses the order of whitespace-separated words, collapses any run of whitespace between them to a single space, and strips leading/trailing whitespace. E.g. '  the sky   is blue ' -> 'blue is sky the'.",
+  "test_file": "test_task_03.py"
+}

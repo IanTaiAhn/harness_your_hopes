@@ -7,3 +7,4 @@ projects/*/progress.json
 projects/*/measurements/*.jsonl
 projects/05-capstone/target/
 projects/03-permission-gated-agent/sandbox/
+projects/04-generator-evaluator/tasks/solutions/*.py

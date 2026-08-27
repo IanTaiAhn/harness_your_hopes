@@ -1,0 +1,5 @@
+{
+  "id": "task_07_dedupe",
+  "prompt": "Write a Python file at tasks/solutions/task_07_dedupe.py that defines `dedupe(items: list) -> list`. It removes duplicate values while preserving the order of each value's first occurrence.",
+  "test_file": "test_task_07.py"
+}

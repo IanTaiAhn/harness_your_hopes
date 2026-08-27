@@ -1,0 +1,5 @@
+{
+  "id": "task_14_run_length_decode",
+  "prompt": "Write a Python file at tasks/solutions/task_14_run_length_decode.py that defines `run_length_decode(s: str) -> str`. It reverses the '<count><char>' run-length format (e.g. '3a2b1c' -> 'aaabbc'). Counts may be more than one digit (e.g. '12a' -> 12 copies of 'a').",
+  "test_file": "test_task_14.py"
+}

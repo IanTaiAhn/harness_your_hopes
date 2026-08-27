@@ -1,0 +1,5 @@
+{
+  "id": "task_19_rotate_list",
+  "prompt": "Write a Python file at tasks/solutions/task_19_rotate_list.py that defines `rotate_list(items: list, k: int) -> list`. Rotate `items` by `k` positions, handling `k` larger than the list length.",
+  "test_file": "test_task_19.py"
+}

@@ -1,0 +1,5 @@
+{
+  "id": "task_05_is_prime",
+  "prompt": "Write a Python file at tasks/solutions/task_05_is_prime.py that defines `is_prime(n: int) -> bool`. Numbers less than 2 (including negatives and 0 and 1) are not prime.",
+  "test_file": "test_task_05.py"
+}

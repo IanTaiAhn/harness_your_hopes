@@ -1,0 +1,5 @@
+{
+  "id": "task_10_binary_search",
+  "prompt": "Write a Python file at tasks/solutions/task_10_binary_search.py that defines `binary_search(arr: list[int], target: int) -> int`. `arr` is sorted ascending. Return the index of `target` if present, else -1. Must run in O(log n).",
+  "test_file": "test_task_10.py"
+}

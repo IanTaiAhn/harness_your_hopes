@@ -1,0 +1,5 @@
+{
+  "id": "task_02_is_palindrome",
+  "prompt": "Write a Python file at tasks/solutions/task_02_is_palindrome.py that defines `is_palindrome(s: str) -> bool`. It must ignore case, spaces, and punctuation when checking \u2014 e.g. 'A man, a plan, a canal: Panama' is a palindrome.",
+  "test_file": "test_task_02.py"
+}

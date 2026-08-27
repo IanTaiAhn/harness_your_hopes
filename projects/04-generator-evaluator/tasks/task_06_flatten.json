@@ -1,0 +1,5 @@
+{
+  "id": "task_06_flatten",
+  "prompt": "Write a Python file at tasks/solutions/task_06_flatten.py that defines `flatten(nested: list) -> list`. It flattens a list that may contain other lists nested to arbitrary depth into one flat list, preserving element order.",
+  "test_file": "test_task_06.py"
+}

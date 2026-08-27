@@ -1,0 +1,5 @@
+{
+  "id": "task_13_run_length_encode",
+  "prompt": "Write a Python file at tasks/solutions/task_13_run_length_encode.py that defines `run_length_encode(s: str) -> str`. Encode consecutive runs of the same character as '<count><char>'. E.g. 'aaabbc' -> '3a2b1c'. A single occurrence still gets a count of 1 (not omitted).",
+  "test_file": "test_task_13.py"
+}

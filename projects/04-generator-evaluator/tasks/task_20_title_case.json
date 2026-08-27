@@ -1,0 +1,5 @@
+{
+  "id": "task_20_title_case",
+  "prompt": "Write a Python file at tasks/solutions/task_20_title_case.py that defines `title_case(s: str) -> str`. Convert `s` to title case, the way a book or article title is conventionally capitalized.",
+  "test_file": "test_task_20.py"
+}

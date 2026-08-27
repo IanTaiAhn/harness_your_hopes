@@ -1,0 +1,5 @@
+{
+  "id": "task_04_sum_of_digits",
+  "prompt": "Write a Python file at tasks/solutions/task_04_sum_of_digits.py that defines `sum_of_digits(n: int) -> int`. It sums the decimal digits of n. Negative numbers must use the digits of their absolute value (e.g. -123 -> 6, not an error or a negative result).",
+  "test_file": "test_task_04.py"
+}

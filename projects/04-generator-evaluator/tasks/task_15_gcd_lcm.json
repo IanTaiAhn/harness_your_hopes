@@ -1,0 +1,5 @@
+{
+  "id": "task_15_gcd_lcm",
+  "prompt": "Write a Python file at tasks/solutions/task_15_gcd_lcm.py that defines `gcd_lcm(a: int, b: int) -> tuple[int, int]` returning (gcd, lcm) of two positive integers.",
+  "test_file": "test_task_15.py"
+}

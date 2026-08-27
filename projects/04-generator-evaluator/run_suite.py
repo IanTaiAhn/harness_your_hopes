@@ -37,10 +37,30 @@ def run_one(task_spec: dict) -> dict:
 
 
 def main() -> None:
-    # TODO: load task specs from TASKS_DIR/*.json, run_one() each,
-    # append results to LOG_PATH, print the self-reported vs. verified
-    # success-rate gap at the end
-    raise NotImplementedError
+    task_specs = sorted(TASKS_DIR.glob("*.json"))
+    if not task_specs:
+        raise SystemExit(f"no task specs found in {TASKS_DIR}")
+
+    LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    results = []
+    for spec_path in task_specs:
+        task_spec = json.loads(spec_path.read_text(encoding="utf-8"))
+        result = run_one(task_spec)
+        results.append(result)
+        with LOG_PATH.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(result) + "\n")
+        print(
+            f"{task_spec['id']}: self_reported={result['self_reported']} "
+            f"verified={result['verified']} (attempt {result['attempt']})",
+            flush=True,
+        )
+
+    total = len(results)
+    self_reported_count = sum(1 for r in results if r["self_reported"])
+    verified_count = sum(1 for r in results if r["verified"])
+    print(f"\nself-reported success: {self_reported_count}/{total}")
+    print(f"evaluator-verified success: {verified_count}/{total}")
+    print(f"gap: {self_reported_count - verified_count}")
 
 
 if __name__ == "__main__":

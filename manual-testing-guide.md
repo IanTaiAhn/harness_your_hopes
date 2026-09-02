@@ -2,6 +2,15 @@
 
 Layer-by-layer breakdown of all five rungs, plus concrete manual steps for surfacing each project's known shortcomings by hand — not just "run it and see if it works," but specific pokes at the exact places each design cuts corners. Projects 1–3 were written after Project 3 landed, as a reference before starting Project 4. Projects 4–5 were added after the capstone landed, once both had code but were still waiting on a real Ollama run.
 
+## How `measurements/results.md` actually gets filled in
+
+Nothing in this repo writes to a project's `results.md` automatically — it's a hand-authored template (literal `___` blanks, empty table cells, `<!-- Fill in after ... -->` comments) and stays that way until someone transcribes real evidence into it. The evidence itself comes from two sources, and both are needed:
+
+1. **Automated raw logs, produced just by running the code.** `log_token_usage()` (`common/ollama_client.py`) writes per-turn token counts to `measurements/tokens.jsonl` inside every `generate()`/`run_session()` call; `run_suite.py` writes each task's `{self_reported, verified, attempt}` to `measurements/runs.jsonl` as it runs and prints a summary; `audit.py` (Project 3) writes every allowed/refused action to `audit.jsonl`. These happen for free just from doing a normal run — no extra step required.
+2. **Manual pokes, from this guide.** Kill points (`taskkill`), hand-edited `progress.json`, `mklink /J` junctions, ablation flags (`-NoFeatureList`/`-NoGitLog`/`-NoCommit`) — the specific "break it" maneuvers listed per project above can't be automated away; they're deliberate interventions a person (or an agent driving the terminal) performs, watching what happens each time.
+
+The actual step that's still manual either way: reading the `.jsonl` output plus what you observed during the break-it pass, and writing the summarized numbers/pass-fail/takeaway into that project's `results.md` by hand. `results.md` is the artifact — it's meant to be the human-readable distillate of the raw logs and observed behavior, not something the harness produces on its own.
+
 ---
 
 ## Project 1 — Bare-metal tool loop

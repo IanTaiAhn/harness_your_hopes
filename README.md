@@ -28,4 +28,15 @@ Each project's own `README.md` and the matching section of `manual-testing-guide
 
 ## Automating the Measure step
 
-Every project except 2.5 now has a `measure.py` (from that project's own directory) that drives its Measure section for real instead of hand-transcribing trial results: it runs the actual trials, logs each one's outcome — including *why* it failed, not just pass/fail — to a `measurements/*.jsonl` file, and rewrites `measurements/results.md`'s tables from that log (prose outside the `<!-- MEASURE:BEGIN ... -->` markers is left alone). Most need Ollama reachable with the relevant model pulled; run with `--dry-run` first (a scripted stand-in model, no Ollama) to confirm the harness plumbing itself is correct before spending real inference time on it. Project 3's `verify_policy.py` needs no Ollama at all — it drives the real (non-mocked) allowlist against a real temp directory. See each project's own README "Measure" section for exact flags.
+Every project except 2.5 now has a `measure.py` (Project 3: `verify_policy.py`) that drives its Measure section for real instead of hand-transcribing trial results: it runs the actual trials, logs each one's outcome — including *why* it failed, not just pass/fail — to a `measurements/*.jsonl` file, and rewrites `measurements/results.md`'s tables from that log (prose outside the `<!-- MEASURE:BEGIN ... -->` markers is left alone). Run every command from the project's own directory. Every command below defaults to model `qwen3.5:4b`; pass `--model <name>` (or set `HARNESS_MODEL`) if that's not what you have pulled — check with `ollama list` first. Run with `--dry-run` first (a scripted stand-in model, no Ollama needed) to confirm the harness plumbing itself is correct before spending real inference time on it.
+
+| Project | Command |
+|---|---|
+| 1. Bare-metal tool loop | `uv run python measure.py` — 40 trials (retry on/off × 4B/9B × 10), needs both models pulled (or `--models qwen3.5:4b` for just one) |
+| 2. Survive a restart | `uv run python measure.py` — 5 kill-point trials + the structured-vs-naive crossover-length sweep. `--skip-kill`/`--skip-crossover` to run just one half |
+| 2.5 Context overflow | Not built yet — see `projects/025-context-overflow/README.md` |
+| 3. Permission-gated file agent | `uv run python verify_policy.py` — **no Ollama needed**, drives the real allowlist against a real temp directory |
+| 4. Generator–evaluator loop | `uv run python run_suite.py --model qwen3.5:4b` then again with `--model qwen3.5:9b` (each is a full 20-task run); `uv run python render_results.py` to rebuild `results.md` from existing logs without re-running |
+| 5. Capstone | `uv run python measure.py` — baseline + all 3 ablations, 10 sessions each by default. Scope down first with `--configs baseline --iterations 3` |
+
+See each project's own README "Measure" section for the full flag list and what each measurement means.

@@ -60,7 +60,20 @@ def _normalize_tool_calls(message: dict) -> list[dict] | None:
     return [{"function": {"name": parsed.get("name"), "arguments": parsed.get("arguments", {})}}]
 
 
-def run(task: str) -> bool:
+def run(task: str, diagnostics: dict | None = None) -> bool:
+    """diagnostics, if given, is filled in-place with why the run ended
+    the way it did (stop_reason/turns_used/json_retries/last_error) —
+    optional and additive so existing callers passing just `task` are
+    unaffected. This is what measure.py needs to tell "hit max turns"
+    apart from "gave up on malformed JSON" instead of just a bool.
+    """
+    if diagnostics is None:
+        diagnostics = {}
+    diagnostics.setdefault("stop_reason", None)
+    diagnostics.setdefault("turns_used", 0)
+    diagnostics.setdefault("json_retries", 0)
+    diagnostics.setdefault("last_error", None)
+
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": task},
@@ -70,8 +83,14 @@ def run(task: str) -> bool:
 
     json_retries = 0
     for turn in range(MAX_TURNS):
+        diagnostics["turns_used"] = turn + 1
         print(f"[turn {turn}] waiting on model...", flush=True)
-        result = chat(MODEL, messages, tools=TOOLS_SCHEMA)
+        try:
+            result = chat(MODEL, messages, tools=TOOLS_SCHEMA)
+        except Exception as e:
+            diagnostics["stop_reason"] = "chat_error"
+            diagnostics["last_error"] = str(e)
+            return False
         log_token_usage(log_path, turn, result)
         print(
             f"[turn {turn}] {result.prompt_tokens} prompt / "
@@ -86,16 +105,19 @@ def run(task: str) -> bool:
 
         if tool_calls is None:
             print(f"[turn {turn}] final answer, done", flush=True)
+            diagnostics["stop_reason"] = "final_answer"
             return True  # plain-text final answer: task considered done
 
         if not tool_calls:
             json_retries += 1
+            diagnostics["json_retries"] = json_retries
             print(
                 f"[turn {turn}] malformed tool-call JSON "
                 f"(retry {json_retries}/{MAX_JSON_RETRIES})",
                 flush=True,
             )
             if json_retries > MAX_JSON_RETRIES:
+                diagnostics["stop_reason"] = "max_json_retries_exceeded"
                 return False
             messages.append(
                 {
@@ -123,10 +145,12 @@ def run(task: str) -> bool:
                 output = DISPATCH[name](**args)
             except Exception as e:  # tool failure is fed back, not fatal
                 output = f"error: {e}"
+                diagnostics["last_error"] = str(output)
             preview = str(output)[:200] + ("..." if len(str(output)) > 200 else "")
             print(f"[turn {turn}] {name} -> {preview}", flush=True)
             messages.append({"role": "tool", "content": str(output)})
 
+    diagnostics["stop_reason"] = "max_turns"
     return False  # hit MAX_TURNS without a clean finish
 
 

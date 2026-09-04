@@ -10,13 +10,14 @@ generate; print(generate('write tasks/solutions/x.py with def f(): return 1'))"
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from common.ollama_client import chat, log_token_usage  # noqa: E402
 
-MODEL = "qwen3.5:4b"
+MODEL = os.environ.get("HARNESS_MODEL", "qwen3.5:4b")
 MAX_TURNS = 10
 
 # Deliberately minimal tool set (write_file/read_file only) — this role

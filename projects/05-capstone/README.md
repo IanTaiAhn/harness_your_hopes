@@ -33,14 +33,16 @@ The loop runs unattended across several restarts and ends with a working, increm
 
 ## Measure
 
-Ablate one component at a time and rerun the full loop from scratch each time:
+`uv run python measure.py` (from this directory; needs Ollama + `qwen3.5:4b`) automates all four configs: it wipes and reinitializes `target/` per config, drives `--iterations` (default 10) genuinely fresh `coding_agent.py` subprocesses the same way `run_loop.ps1` does, checks the real ground-truth tests after every iteration (not the model's own self-report) to find the first iteration where the whole app actually works, and regenerates `measurements/results.md` with iterations-to-done, git-history shape, and an auto-derived failure mode per ablation:
 
-1. Baseline: full harness (feature list + git-log read + commit-per-session), record how many iterations to a working app
-2. Remove the feature list (agent must infer what's done from git log alone)
-3. Remove the git-log read (agent only has feature_list.json)
-4. Remove the commit-per-session requirement (agent may or may not commit)
+1. Baseline: full harness (feature list + git-log read + commit-per-session)
+2. `--configs no_feature_list` — agent must infer what's done from git log + reading `todo.py` alone
+3. `--configs no_gitlog` — agent only has `feature_list.json`
+4. `--configs no_commit` — agent may or may not commit
 
-Record which single ablation breaks the run fastest/worst in `measurements/results.md` — that component is carrying the most assumption weight, and it's the first one to re-test when a better local model becomes available.
+Run a cheap subset first with `--configs baseline --iterations 3`; a full `uv run python measure.py` run is 4 configs × 10 sessions = 40 real model sessions. Validate the harness itself first with `uv run python measure.py --dry-run` (see Status).
+
+Which single ablation breaks the run fastest/worst — recorded automatically in the Takeaway — is carrying the most assumption weight, and it's the first one to re-test when a better local model becomes available.
 
 ## Files
 
@@ -48,12 +50,13 @@ Record which single ablation breaks the run fastest/worst in `measurements/resul
 - `initializer.py`
 - `init.ps1` — copied into `target/` by the initializer
 - `tests_template/` — the fixed ground-truth test suite, copied into `target/tests/` by the initializer (kept here, not in `target/`, since `target/` is gitignored)
-- `coding_agent.py`
+- `coding_agent.py` — also carries a `HARNESS_DRY_RUN=1`-gated scripted reference model, used only by `measure.py --dry-run`
 - `test_coding_agent.py` — mocked unit tests (no live Ollama in this authoring environment; real git + pytest subprocess calls against a throwaway `target/`-like repo under `tmp_path`)
-- `run_loop.ps1`
+- `run_loop.ps1` — the original PowerShell driver; `measure.py` is the cross-platform, jsonl-logging, results.md-writing equivalent
+- `measure.py` — automates the Measure step above
 - `target/` — the actual app being built (created by initializer, git-tracked separately from this repo, gitignored here)
 - `measurements/results.md`
 
 ## Status
 
-Code (`contract.py`, `initializer.py`, `init.ps1`, `tests_template/` × 5 feature tests, `coding_agent.py`) and mocked unit tests are done — `uv run pytest projects/05-capstone/` passes 15/15. `initializer.py` was run for real in this authoring environment (real `git init`/commit, no Ollama needed) and produces a clean `target/` with all 5 features pending; the 10 template tests were also verified for real against a hand-written reference `todo.py` in a scratch directory (all pass; a stub `todo.py` correctly fails them, confirming they're not vacuous). This authoring environment has no Ollama, so the actual multi-process loop against `qwen3.5:4b` — and all four `measurements/results.md` runs (baseline + 3 ablations) — are still open. Do that next: `uv run python initializer.py`, then `.\run_loop.ps1 -Iterations 10` for baseline, then delete `target/` and repeat once per `-NoFeatureList`/`-NoGitLog`/`-NoCommit` switch.
+Code (`contract.py`, `initializer.py`, `init.ps1`, `tests_template/` × 5 feature tests, `coding_agent.py`, `measure.py`) and mocked unit tests are done — `uv run pytest projects/05-capstone/` passes 15/15. `initializer.py` was run for real in this authoring environment (real `git init`/commit, no Ollama needed) and produces a clean `target/` with all 5 features pending; the 10 template tests were also verified for real against a hand-written reference `todo.py` in a scratch directory (all pass; a stub `todo.py` correctly fails them, confirming they're not vacuous). `measure.py --dry-run` was also run for real here: all 4 configs (baseline + 3 ablations) drove real subprocesses, real git commits, and real pytest evaluation end to end without crashing, using a scripted stand-in model (`HARNESS_DRY_RUN=1`) that writes the full reference `todo.py` in one shot rather than one feature per session like a real model would — so its iteration counts aren't representative of real pacing, but it did catch two real, structural findings worth keeping: with `ABLATE_NO_FEATURE_LIST`, nothing in the harness can tell it's done once the app actually works (no early stop, wasted sessions keep running), and with `ABLATE_NO_COMMIT`, `feature_list.json` keeps advancing on disk even though git history — the harness's supposed source of truth — never moves past the initializer's first commit. This environment has no Ollama, so the actual multi-process loop against `qwen3.5:4b` — and all four real `measurements/results.md` runs (baseline + 3 ablations) — are still open. Do that next: `uv run python measure.py`.

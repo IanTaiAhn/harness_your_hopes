@@ -25,3 +25,7 @@ Run every command from the project's own directory (e.g. `cd projects/01-bare-me
 | 5. Capstone | `uv run python initializer.py` once, then `uv run python coding_agent.py` per session, or `.\run_loop.ps1 -Iterations 10` to drive N fresh sessions in a loop (add `-NoFeatureList`/`-NoGitLog`/`-NoCommit` for the ablation runs) |
 
 Each project's own `README.md` and the matching section of `manual-testing-guide.md` have the fuller picture — required env vars, expected output, and what to try breaking once the happy path works.
+
+## Automating the Measure step
+
+Every project except 2.5 now has a `measure.py` (from that project's own directory) that drives its Measure section for real instead of hand-transcribing trial results: it runs the actual trials, logs each one's outcome — including *why* it failed, not just pass/fail — to a `measurements/*.jsonl` file, and rewrites `measurements/results.md`'s tables from that log (prose outside the `<!-- MEASURE:BEGIN ... -->` markers is left alone). Most need Ollama reachable with the relevant model pulled; run with `--dry-run` first (a scripted stand-in model, no Ollama) to confirm the harness plumbing itself is correct before spending real inference time on it. Project 3's `verify_policy.py` needs no Ollama at all — it drives the real (non-mocked) allowlist against a real temp directory. See each project's own README "Measure" section for exact flags.

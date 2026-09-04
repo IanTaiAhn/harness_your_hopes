@@ -17,10 +17,10 @@ Move to WSL2 or a container for this one — isolation stops being optional here
 
 Run each against the Python-only allowlist first, record pass/fail, then rerun with the sandbox underneath:
 
-- [x] `..` traversal — blocked (mocked test in `test_policy.py`), portable to any OS
+- [x] `..` traversal — blocked, verified for real by `verify_policy.py` (no mocking, no Ollama needed) against a real allowlist root, portable to any OS
 - [ ] drive-relative paths (`C:foo`) — Windows-only concept, needs a real Windows run
 - [ ] UNC paths (`\\?\C:\...`) — Windows-only concept, needs a real Windows run
-- [ ] directory junctions (`mklink /J`) — Linux analog (symlink escape) is blocked and covered in `test_policy.py`; the real junction needs a Windows run
+- [x] directory junctions (`mklink /J`) — Linux analog (symlink escape) blocked, verified for real by `verify_policy.py`; the real junction still needs a Windows run
 - [ ] case-insensitivity tricks — Linux filesystems are case-sensitive by default, so this doesn't reproduce here; needs a real Windows run
 - [ ] 8.3 short names (`PROGRA~1`) — Windows-only concept, needs a real Windows run
 
@@ -30,11 +30,11 @@ The agent cannot touch anything outside its allowlist even under deliberate atta
 
 ## Measure
 
-Record all 5 attack results against Python-allowlist-only, then all 5 again with the sandbox underneath, in `measurements/results.md`. The gap between those two counts is the lesson — expect Python-only to leak on at least one.
+Run `uv run python verify_policy.py` (from this directory — no Ollama needed) to automatically drive `agent.gated_call()` against a real temporary allowlist root for every OS-portable attack, log every attempt (blocked or not) to `measurements/verify_policy_audit.jsonl`, and regenerate the `measurements/results.md` table from the real results. It also detects whether a Docker daemon is reachable and reports exactly why the sandbox column is still pending when it isn't. The gap between the two columns is the lesson — expect Python-only to leak on at least one Windows-specific technique once someone runs the remaining 3 attacks (drive-relative, UNC, 8.3 short names) and the sandbox column on a real Windows/Docker box.
 
 ## Status
 
-Code is implemented and covered by mocked unit tests (`uv run pytest projects/03-permission-gated-agent`) that fake `chat()`, so the policy gate, confirmation logic, and audit trail are all verified without a real model or a real sandbox. This was authored in a Linux environment with no Docker daemon and no `bwrap` available, so the container boundary itself (the actual "Done when" criterion) is written but unverified — `docker build`/`docker run` against the `Dockerfile`, and the 5 Windows-specific attacks in `measurements/results.md`, still need to run for real on a Windows/Docker machine before this project's Measure step is complete.
+Code is implemented and covered by mocked unit tests (`uv run pytest projects/03-permission-gated-agent`) that fake `chat()`, so the policy gate, confirmation logic, and audit trail are all verified without a real model or a real sandbox. `verify_policy.py` goes one step further and exercises the real (non-mocked) allowlist + audit-log path against a real filesystem for the 3 OS-portable attacks — see `measurements/results.md` for the actual results. This was authored (and this automation run) in a Linux environment with the Docker CLI installed but no daemon reachable and no `bwrap` available, so the container boundary itself (the actual "Done when" criterion) is written but unverified — `docker build`/`docker run` against the `Dockerfile`, and the 3 genuinely Windows-only attacks, still need to run for real on a Windows/Docker machine before this project's Measure step is complete.
 
 Two design decisions worth knowing about if you pick this up: (1) `move_file` checks **both** `src` and `dest` against the allowlist — an agent that could move a file to an unchecked destination could exfiltrate data as easily as one that could read outside the allowlist directly. (2) `run_command` from Project 1 is deliberately **not** in this project's tool set — a path-based allowlist has no single `path` argument to check in an arbitrary shell command string, so gating it here would be a false sense of security; the container boundary is what actually has to stop it, which is exactly the point this project is trying to make.
 
@@ -46,4 +46,5 @@ Two design decisions worth knowing about if you pick this up: (1) `move_file` ch
 - `agent.py` — Project 1/2's loop + policy gate + audit calls on every tool invocation
 - `Dockerfile` (or Windows Sandbox `.wsb` config) — the enforcement boundary
 - `test_policy.py`, `test_tools.py`, `test_agent.py` — mocked unit tests (no live Ollama or container needed)
+- `verify_policy.py` — real (non-mocked, no Ollama needed) attack runner; regenerates `measurements/results.md`
 - `measurements/results.md`

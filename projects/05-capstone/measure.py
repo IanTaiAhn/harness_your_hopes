@@ -71,7 +71,7 @@ def commit_count() -> int:
 
 def run_config(label: str, overrides: dict, iterations: int, dry_run: bool) -> dict:
     reset_target()
-    env = {**os.environ, **overrides}
+    env = {**os.environ, "HARNESS_MODEL": MODEL, **overrides}
     if dry_run:
         env["HARNESS_DRY_RUN"] = "1"
 
@@ -208,11 +208,14 @@ def render_results_md() -> None:
 
 
 def main() -> None:
+    global MODEL
     parser = argparse.ArgumentParser()
+    parser.add_argument("--model", default=os.environ.get("HARNESS_MODEL", MODEL))
     parser.add_argument("--configs", nargs="+", default=list(CONFIGS), choices=list(CONFIGS))
     parser.add_argument("--iterations", type=int, default=DEFAULT_ITERATIONS)
     parser.add_argument("--dry-run", action="store_true", help="scripted reference model, no Ollama")
     args = parser.parse_args()
+    MODEL = args.model
 
     if not args.dry_run:
         ok, message = is_available(models=[MODEL])

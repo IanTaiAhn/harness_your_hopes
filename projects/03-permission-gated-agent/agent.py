@@ -18,7 +18,7 @@ from audit import record  # noqa: E402
 from policy import Allowlist, PolicyViolation  # noqa: E402
 from tools import DISPATCH, TOOL_ACTIONS, TOOLS_SCHEMA  # noqa: E402
 
-MODEL = "qwen3.5:4b"
+MODEL = os.environ.get("HARNESS_MODEL", "qwen3.5:4b")
 MAX_TURNS = 20
 MAX_JSON_RETRIES = 2
 WORKSPACE_ROOT = os.environ.get("WORKSPACE_ROOT", str(Path(__file__).parent / "sandbox"))

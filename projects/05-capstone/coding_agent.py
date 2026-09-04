@@ -30,7 +30,7 @@ from evaluator import evaluate_deterministic  # noqa: E402
 
 from contract import CLI_CONTRACT, FEATURES, TEST_FILES  # noqa: E402
 
-MODEL = "qwen3.5:4b"
+MODEL = os.environ.get("HARNESS_MODEL", "qwen3.5:4b")
 MAX_TURNS = 15
 MAX_RETRIES = 2  # retries-with-feedback within one session, before giving up
 

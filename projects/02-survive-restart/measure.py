@@ -60,7 +60,12 @@ CROSSOVER_LENGTHS = [5, 10, 15, 20, 25]
 
 
 def _run_agent(cwd: Path, env_overrides: dict, task: str | None, dry_run: bool) -> subprocess.CompletedProcess:
-    env = {**os.environ, **env_overrides, "HARNESS_PROGRESS_PATH": str(cwd / "progress.json")}
+    env = {
+        **os.environ,
+        "HARNESS_MODEL": MODEL,
+        **env_overrides,
+        "HARNESS_PROGRESS_PATH": str(cwd / "progress.json"),
+    }
     # A synthetic n-step task needs n+1 turns (n creates + 1 summary) --
     # agent.py's default MAX_TURNS=25 would otherwise silently cap out
     # and get misread as "lost track" at exactly the largest length
@@ -172,13 +177,18 @@ def render_results_md() -> None:
 
 
 def main() -> None:
+    global MODEL
     parser = argparse.ArgumentParser()
+    parser.add_argument("--model", default=os.environ.get("HARNESS_MODEL", MODEL))
     parser.add_argument("--dry-run", action="store_true", help="fake chat(), no Ollama needed")
     parser.add_argument("--skip-kill", action="store_true")
     parser.add_argument("--skip-crossover", action="store_true")
     args = parser.parse_args()
+    MODEL = args.model
 
-    if not args.dry_run and not args.skip_crossover:
+    # Kill trials call real chat() too (unless --dry-run) -- this check
+    # covers both halves, not just the crossover one.
+    if not args.dry_run:
         ok, message = is_available(models=[MODEL])
         if not ok:
             raise SystemExit(f"{message}\nRun with --dry-run to validate the harness without Ollama.")

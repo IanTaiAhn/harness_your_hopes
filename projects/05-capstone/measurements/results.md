@@ -1,6 +1,6 @@
 # Project 5 — Measurement Log
 
-Regenerate with `uv run python measure.py` (from this directory; needs Ollama + `qwen3.5:4b` reachable — each config runs `--iterations` fresh `coding_agent.py` subprocesses, default 10, so a full real run is 4 configs × 10 sessions = 40 real model sessions). Validated dry (`--dry-run`, scripted reference `todo.py`, no Ollama) — all 4 configs ran end to end without crashing, including the `no_feature_list`/`no_commit` edge cases, confirming the harness plumbing itself is correct. No real (Ollama-backed) trials recorded yet, and the dry run's numbers aren't representative of real pacing (the scripted stand-in front-loads the whole solution into session 1, where a real model would build one feature per session) — see README's Status section.
+Regenerate with `uv run python measure.py --model <your-model>` (from this directory; defaults to `qwen3.5:4b`, or set `HARNESS_MODEL` — needs Ollama reachable with that model. Each config runs `--iterations` fresh `coding_agent.py` subprocesses, default 10, so a full real run is 4 configs × 10 sessions = 40 real model sessions). Validate the harness itself first with `uv run python measure.py --dry-run` (scripted reference `todo.py`, no Ollama). Raw per-iteration detail (test-pass counts, commit counts, stdout tail) lives in `measurements/runs.jsonl`.
 
 ## Baseline (full harness)
 

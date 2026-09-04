@@ -20,7 +20,7 @@ from tools import DISPATCH, TOOLS_SCHEMA  # noqa: E402
 
 from state import Progress, load, save_atomic  # noqa: E402
 
-MODEL = "qwen3.5:4b"
+MODEL = os.environ.get("HARNESS_MODEL", "qwen3.5:4b")
 MAX_TURNS = int(os.environ.get("HARNESS_MAX_TURNS", "25"))
 MAX_JSON_RETRIES = 2
 PROGRESS_PATH = Path(os.environ.get("HARNESS_PROGRESS_PATH", str(Path(__file__).parent / "progress.json")))

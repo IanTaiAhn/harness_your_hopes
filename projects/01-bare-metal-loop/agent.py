@@ -6,6 +6,7 @@ write the count to a new file"
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -14,7 +15,7 @@ from common.ollama_client import chat, log_token_usage  # noqa: E402
 
 from tools import DISPATCH, TOOLS_SCHEMA  # noqa: E402
 
-MODEL = "qwen3.5:4b"
+MODEL = os.environ.get("HARNESS_MODEL", "qwen3.5:4b")
 MAX_TURNS = 15
 MAX_JSON_RETRIES = 2  # toggle this to 0 for the Project 1 "measure" ablation
 

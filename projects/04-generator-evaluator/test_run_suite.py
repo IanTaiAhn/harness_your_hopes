@@ -52,8 +52,9 @@ def test_main_computes_the_self_reported_vs_verified_gap(tmp_path, monkeypatch):
     (tasks_dir / "a.json").write_text('{"id": "a", "prompt": "p", "test_file": "test_a.py"}', encoding="utf-8")
     (tasks_dir / "b.json").write_text('{"id": "b", "prompt": "p", "test_file": "test_b.py"}', encoding="utf-8")
 
+    measurements_dir = tmp_path / "measurements"
     monkeypatch.setattr(run_suite, "TASKS_DIR", tasks_dir)
-    monkeypatch.setattr(run_suite, "LOG_PATH", tmp_path / "runs.jsonl")
+    monkeypatch.setattr(run_suite, "MEASUREMENTS_DIR", measurements_dir)
 
     # "a" self-reports success but never actually passes (the gap this
     # whole project measures); "b" is honestly correct both ways.
@@ -64,7 +65,9 @@ def test_main_computes_the_self_reported_vs_verified_gap(tmp_path, monkeypatch):
 
     monkeypatch.setattr(run_suite, "run_one", fake_run_one)
 
-    run_suite.main()
+    # --no-render + skip_availability_check keep this test from touching
+    # the real Ollama check or the real measurements/results.md.
+    run_suite.main(["--model", "qwen3.5:4b", "--no-render"], skip_availability_check=True)
 
-    lines = (tmp_path / "runs.jsonl").read_text(encoding="utf-8").splitlines()
+    lines = (measurements_dir / "runs_qwen35_4b.jsonl").read_text(encoding="utf-8").splitlines()
     assert len(lines) == 2

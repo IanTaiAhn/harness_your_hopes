@@ -16,15 +16,16 @@ The harness catches at least one real case where the generator claimed success b
 
 ## Measure
 
-1. Run 20 tasks. For each, log the generator's *self-reported* success (did it claim "done"?) and the evaluator's *verified* success (did the test actually pass?).
-2. Compute the gap between self-reported and verified success rate. This gap is the headline number for the whole ladder.
-3. Repeat on the 9B — does the gap narrow?
+1. Run 20 tasks: `uv run python run_suite.py --model qwen3.5:4b` (needs Ollama reachable with that model pulled). For each, this logs the generator's *self-reported* success (did it claim "done"?) and the evaluator's *verified* success (did the test actually pass?) to `measurements/runs_qwen35_4b.jsonl`, and regenerates `measurements/results.md` automatically at the end.
+2. The gap between self-reported and verified success rate is computed for you at the bottom of that run and in `results.md`. This gap is the headline number for the whole ladder.
+3. Repeat on the 9B: `uv run python run_suite.py --model qwen3.5:9b` — does the gap narrow? `results.md`'s Takeaway is auto-filled once both jsonl logs exist. Re-render without re-running either suite with `uv run python render_results.py`.
 
 ## Files
 
 - `generator.py`
 - `evaluator.py`
-- `run_suite.py` — drives all 20 tasks through generate -> evaluate -> retry-with-feedback
+- `run_suite.py` — drives all 20 tasks through generate -> evaluate -> retry-with-feedback, for one `--model` at a time; regenerates `results.md` at the end unless `--no-render`
+- `render_results.py` — rebuilds `measurements/results.md` from whatever `measurements/runs_*.jsonl` already exist, without re-running anything
 - `tasks/` — the 20 task specs (`taskNN_*.json`) + their pytest checks (`test_taskNN.py`); `conftest.py` excludes the checks from repo-wide `pytest` runs (they fail by design until a generator run writes a solution) while still letting `evaluator.py` run each one directly by path
 - `test_generator.py`, `test_evaluator.py`, `test_run_suite.py` — mocked unit tests (no live Ollama in this authoring environment, see note below)
 - `measurements/results.md`

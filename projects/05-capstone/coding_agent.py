@@ -23,14 +23,14 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from common.ollama_client import chat, log_token_usage  # noqa: E402
+from common.ollama_client import ChatResult, chat, log_token_usage  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "04-generator-evaluator"))
 from evaluator import evaluate_deterministic  # noqa: E402
 
 from contract import CLI_CONTRACT, FEATURES, TEST_FILES  # noqa: E402
 
-MODEL = "qwen3.5:4b"
+MODEL = os.environ.get("HARNESS_MODEL", "qwen3.5:4b")
 MAX_TURNS = 15
 MAX_RETRIES = 2  # retries-with-feedback within one session, before giving up
 
@@ -41,6 +41,117 @@ TESTS_DIR = TARGET / "tests"
 ABLATE_NO_FEATURE_LIST = os.environ.get("ABLATE_NO_FEATURE_LIST") == "1"
 ABLATE_NO_GITLOG = os.environ.get("ABLATE_NO_GITLOG") == "1"
 ABLATE_NO_COMMIT = os.environ.get("ABLATE_NO_COMMIT") == "1"
+
+# Reference todo.py matching contract.py's CLI_CONTRACT exactly, used only
+# when HARNESS_DRY_RUN=1 stands in for a real model with a scripted
+# write_file + TASK_COMPLETE response. This exists to validate the loop
+# itself (initializer -> N sessions -> evaluator -> commit gate -> feature
+# list update) end-to-end without Ollama, not to simulate realistic model
+# behavior -- see measure.py.
+_REFERENCE_TODO_PY = '''\
+import argparse
+import json
+from pathlib import Path
+
+
+def _load(store):
+    path = Path(store)
+    if not path.is_file():
+        return []
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _save(store, items):
+    path = Path(store)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(items, indent=2), encoding="utf-8")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command")
+    parser.add_argument("arg", nargs="?")
+    parser.add_argument("--store", required=True)
+    parser.add_argument("--pending", action="store_true")
+    args = parser.parse_args()
+
+    items = _load(args.store)
+
+    if args.command == "add":
+        new_id = 1 if not items else max(i["id"] for i in items) + 1
+        items.append({"id": new_id, "text": args.arg, "done": False})
+        print(f"Added #{new_id}: {args.arg}")
+        _save(args.store, items)
+    elif args.command == "list":
+        shown = [i for i in items if not (args.pending and i["done"])]
+        if not shown:
+            print("No items.")
+        for i in shown:
+            mark = "x" if i["done"] else " "
+            print(f"#{i['id']} [{mark}] {i['text']}")
+    elif args.command == "done":
+        item_id = int(args.arg)
+        for i in items:
+            if i["id"] == item_id:
+                i["done"] = True
+                print(f"Done #{item_id}")
+                _save(args.store, items)
+                return
+        print(f"No item with id {item_id}")
+    elif args.command == "remove":
+        item_id = int(args.arg)
+        for i in items:
+            if i["id"] == item_id:
+                items.remove(i)
+                print(f"Removed #{item_id}")
+                _save(args.store, items)
+                return
+        print(f"No item with id {item_id}")
+
+
+if __name__ == "__main__":
+    main()
+'''
+
+
+def _dry_run_chat():
+    """Scripted stand-in for chat(): every session gets a write_file call
+    with the full reference solution, then a TASK_COMPLETE. Deliberately
+    front-loads everything (a real model wouldn't) -- the point is to
+    exercise the harness's control flow, not to model realistic behavior.
+    """
+    state = {"n": 0}
+
+    def fake_chat(model, messages, tools=None, num_ctx=8192, timeout=300):
+        state["n"] += 1
+        if state["n"] % 2 == 1:
+            return ChatResult(
+                message={
+                    "role": "assistant",
+                    "tool_calls": [
+                        {
+                            "function": {
+                                "name": "write_file",
+                                "arguments": {"path": "todo.py", "content": _REFERENCE_TODO_PY},
+                            }
+                        }
+                    ],
+                },
+                prompt_tokens=10,
+                completion_tokens=10,
+            )
+        return ChatResult(
+            message={"role": "assistant", "content": "TASK_COMPLETE: wrote todo.py."},
+            prompt_tokens=5,
+            completion_tokens=5,
+        )
+
+    return fake_chat
+
+
+if os.environ.get("HARNESS_DRY_RUN") == "1":
+    chat = _dry_run_chat()
+    log_token_usage = lambda *a, **kw: None  # noqa: E731
 
 TOOLS_SCHEMA = [
     {

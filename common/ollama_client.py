@@ -18,6 +18,31 @@ BASE_URL = "http://localhost:11434"
 DEFAULT_NUM_CTX = 8192
 
 
+def is_available(models: list[str] | None = None, timeout: int = 3) -> tuple[bool, str]:
+    """Cheap preflight check for measure.py scripts: is Ollama reachable,
+    and (if given) does `ollama list` actually have the models a
+    measurement run needs? Returns (ok, message) rather than raising, so
+    callers can print one clear line and exit instead of a raw traceback
+    from deep inside a 40-trial loop.
+    """
+    try:
+        response = requests.get(f"{BASE_URL}/api/tags", timeout=timeout)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        return False, f"Ollama not reachable at {BASE_URL}: {e}"
+
+    if not models:
+        return True, "Ollama reachable"
+
+    available = {m["name"] for m in response.json().get("models", [])}
+    missing = [
+        m for m in models if m not in available and not any(a.startswith(m + ":") for a in available)
+    ]
+    if missing:
+        return False, f"Ollama reachable but missing model(s): {missing} (have: {sorted(available)})"
+    return True, "Ollama reachable, all required models present"
+
+
 @dataclass
 class ChatResult:
     message: dict

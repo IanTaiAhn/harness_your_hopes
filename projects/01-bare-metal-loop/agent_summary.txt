@@ -1,0 +1,75 @@
+================================================================================
+SUMMARY OF test_agent.py
+================================================================================
+
+This file contains pytest test cases for an agent system (imported from a local
+module via sys.path manipulation). The code tests the behavior of agent.run() 
+when interacting with a simulated chat interface.
+
+--------------------------------------------------------------------------------
+STRUCTURE AND IMPORTS
+--------------------------------------------------------------------------------
+
+- Uses pathlib and json for path handling and JSON serialization
+- Modifies sys.path to prioritize local versions of 'agent' and 'tools' modules
+- Clears any stale cached modules ('agent', 'tools') to ensure consistent behavior
+- Imports ChatResult from common.ollama_client (represents an LLM response)
+
+--------------------------------------------------------------------------------
+HELPER FUNCTIONS
+--------------------------------------------------------------------------------
+
+1. make_fake_chat(responses):
+   - Creates a mock chat function that returns responses from a pre-defined list
+   - Consumes one response per call by popping from the response queue
+   - Used in tests to simulate LLM behavior deterministically
+
+2. silence_logging(monkeypatch):
+   - Patches the agent's log_token_usage method to do nothing
+   - Prevents logging output during tests to keep results clean and testable
+
+--------------------------------------------------------------------------------
+TEST CASES (4 TOTAL)
+--------------------------------------------------------------------------------
+
+1. test_happy_path_reads_then_writes_then_finishes:
+   - Tests successful execution when agent reads a file, then writes to it,
+     then returns completion text "Done."
+   - Creates an input.txt with content "a\nb\nc\n"
+   - Agent reads the file, calls write_file with content "3"
+   - Verifies output.txt contains exactly "3"
+
+2. test_malformed_tool_json_retries_then_recovers:
+   - Tests graceful recovery after encountering malformed JSON in tool call
+     (missing closing brace in arguments)
+   - First response has malformed JSON: '{"name": "write_file", "arguments": {'}
+   - Second response provides valid JSON that the agent recovers with
+   - Verifies the write operation succeeds and output contains "ok"
+
+3. test_exceeding_max_json_retries_fails:
+   - Tests failure behavior when malformed JSON responses exceed retry budget
+   - Sends MAX_JSON_RETRIES + 1 consecutive malformed responses
+   - Confirms agent.run() returns False after exhausting retry attempts
+
+4. test_retry_budget_ablation_zero_fails_on_first_malformed_reply:
+   - Tests with retry count set to zero
+   - A single malformed JSON response should immediately fail
+   - Verifies agent.run() returns False on first error when no retries allowed
+
+5. test_hits_max_turns_without_finishing:
+   - Tests timeout behavior when model never provides a final answer
+   - Model continuously calls read_file without completing the task
+   - When MAX_TURNS limit is reached (set to 3), agent.run() returns False
+
+--------------------------------------------------------------------------------
+OVERALL PURPOSE
+--------------------------------------------------------------------------------
+
+This file serves as regression tests validating the agent's ability to:
+- Execute tool calls in sequence (read/write operations)
+- Recover from malformed JSON responses with automatic retries
+- Fail gracefully when retry budget or turn limits are exceeded
+- Detect when a model fails to produce a final response
+
+All tests use pytest fixtures (tmp_path, monkeypatch) for isolation and 
+modification of agent internals during testing.
